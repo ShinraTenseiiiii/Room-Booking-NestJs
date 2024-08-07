@@ -13,6 +13,9 @@ export class Room {
 
   @Prop({ required: true })
   capacity: number;
+  
+  @Prop({ default: false })
+  appliedForSeat: boolean;
 
   @Prop({ type: [{ type: Date }], default: [] })
   bookedDates: Date[];
