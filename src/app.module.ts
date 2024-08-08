@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod, Post } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod, Post, Get } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -26,10 +26,11 @@ export class AppModule {
   // auth middleware 
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthMiddleware).forRoutes({
-      path: '*',
-      method: RequestMethod.ALL,
-    });
+    consumer.apply(AuthMiddleware).forRoutes(
+       {   path: '*',  method: RequestMethod.ALL,},
+     {  path: 'bookings/booking-details/:userId',  method: RequestMethod.GET},
+     
+    );
 
 
 // TODO ADMIN MIDDLEWARE
@@ -40,6 +41,10 @@ export class AppModule {
       { path: 'users/schedule-meeting/:username/:jobId', method: RequestMethod.ALL },
       //room controller routes
       { path: 'rooms/create', method: RequestMethod.POST },
+
+      { path: 'bookings/room-details', method: RequestMethod.GET ,},
+    //  { path: 'bookings/booking-details', method: RequestMethod.GET },   // TODO
+    
     );
   }
 
