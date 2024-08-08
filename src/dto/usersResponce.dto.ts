@@ -1,8 +1,12 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsString } from 'class-validator';
 import { IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UsersResponseDto {
+
+  @IsString()
+  readonly id: string;
+
   @IsString()
   readonly username: string;
 
@@ -14,6 +18,10 @@ export class UsersResponseDto {
   @IsString()
   readonly token: string;
 
+  @IsBoolean({ always: true })
+  readonly isActive: boolean;
+
+  
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ApplyForDto)
@@ -21,6 +29,8 @@ export class UsersResponseDto {
 }
 
 export class ApplyForDto {
+
+
   @IsString()
   phoneNumber: string;
 

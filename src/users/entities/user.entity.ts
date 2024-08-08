@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 
 @Schema({timestamps: true})
 export class UsersEntity extends Document {
-  @Prop({unique: true, required: true})
+  @Prop({unique: false, required: true})
   username: string;
 
   @Prop({required: true})

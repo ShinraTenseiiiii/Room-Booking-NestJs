@@ -4,8 +4,10 @@ import { BookingsService } from './bookings.service';
 
 import { Booking } from './entities/booking.entity';
 import { BookSeatDto } from './dto/create-bookings.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('bookings')
+@ApiTags('Contest')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
@@ -23,4 +25,7 @@ export class BookingsController {
       throw new BadRequestException('Error processing booking');
     }
   }
+ 
+  
+
 }

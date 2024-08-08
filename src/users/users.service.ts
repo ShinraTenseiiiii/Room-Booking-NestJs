@@ -32,10 +32,12 @@ import {
   
       if (!jobIds || jobIds.length === 0) {
         return {
+          id: usersEntity._id.toString(),
           username: usersEntity.username,
           email: usersEntity.email,
           userType: usersEntity.usersType,
           applyFor: [],
+          isActive: true,
           token: this.generateJwt(usersEntity),
         };
       }
@@ -44,9 +46,11 @@ import {
   
       if (!jobEntities || jobEntities.length === 0) {
         return {
+          id: usersEntity._id.toString(),
           username: usersEntity.username,
           email: usersEntity.email,
           userType: usersEntity.usersType,
+          isActive: true,
           applyFor: [],
           token: this.generateJwt(usersEntity),
         };
@@ -68,9 +72,11 @@ import {
       });
   
       return {
+        id: usersEntity._id.toString(),
         username: usersEntity.username,
         email: usersEntity.email,
         userType: usersEntity.usersType,
+        isActive: true,
         applyFor: applyForDtos,
         token: this.generateJwt(usersEntity),
       };
@@ -147,6 +153,7 @@ import {
       const appliedForJob = new this.jobModel({
         ...applyForDto,
       });
+  console.log("appliedForJob");
   
       await appliedForJob.save();
   
@@ -181,7 +188,7 @@ import {
     }
 
     async getAllUsersDetails(): Promise<any[]> {
-      const users = await this.usersModel.aggregate([
+      const users = await this.usersModel.aggregate([ // TODO CHATGPT
         {
           $lookup: {
             from: 'jobentities', // Name of the job entities collection (lowercase and plural by default)
@@ -191,18 +198,23 @@ import {
           },
         },
         {
+          $unwind: '$jobs' // Flatten the jobs array
+        },
+        {
           $project: {
-            username: 1,
-            email: 1,
-            'jobs.phoneNumber': 1,
-            'jobs.role': 1,
-            'jobs.applicationStatus': 1,
+            id: '$_id', // Alias _id to id
+            name: '$username', // Alias username to name
+            email: 1, // Keep email field as is
+            phoneNumber: '$jobs.phoneNumber', // Extract phoneNumber from jobs
+            role: '$jobs.role', // Extract role from jobs
+            applicationStatus: '$jobs.applicationStatus', // Extract applicationStatus from jobs
           },
         },
       ]).exec();
     
       return users;
     }
+
     
   
 

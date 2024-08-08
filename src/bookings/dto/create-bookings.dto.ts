@@ -12,7 +12,6 @@ export class BookSeatDto {
   readonly userId: string;
 
   @ApiProperty({
-    description: 'ID of the room being booked',
     type: String,
   })
   @IsNotEmpty()
@@ -20,7 +19,6 @@ export class BookSeatDto {
   readonly roomId: string;
 
   @ApiProperty({
-    description: 'Date for which the seat is being booked',
     type: String,
     example: '2024-07-30T00:00:00Z',
   })

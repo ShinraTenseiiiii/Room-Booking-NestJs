@@ -5,8 +5,10 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Request 
   import { ExpressRequest } from '../middlewares/auth.middleware';
   import { ApplyForDto,ScheduledMeetingDto,UsersResponseDto } from '../dto/usersResponce.dto';
   import { UsersEntity } from './entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
   
   @Controller('users')
+  @ApiTags('Contest')
   export class UsersController {
     constructor(private readonly usersService: UsersService) {}
   
@@ -50,6 +52,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Request 
       const user = await this.usersService.applyForJob(
         request.user.username,
         applyForDto,
+        
       );
   
       return this.usersService.buildUserResponse(user);

@@ -1,11 +1,9 @@
-// src/bookings/bookings.service.ts
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { UsersEntity } from 'src/users/entities/user.entity';
-import { BookSeatDto } from './dto/create-bookings.dto';
 
 @Injectable()
 export class BookingsService {
@@ -15,25 +13,26 @@ export class BookingsService {
     @InjectModel(UsersEntity.name) private userModel: Model<UsersEntity>,
   ) {}
 
-  async bookSeat(userId: string, roomId: string, bookingDate: Date): Promise<Booking> {
-    // Check if the room exists
+  async bookSeat(userId: string, roomId: string, bookingDate: Date): Promise<any> {
+    // Check if room exists
     const room = await this.roomModel.findById(roomId).exec();
     if (!room) {
       throw new NotFoundException('Room not found');
     }
 
-    // Check if the user exists
+    // Check if user exists
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Check if the user has already booked this room on the same date
+    // Check if user has already booked this room on the same date
     const existingBooking = await this.bookingModel.findOne({
       userId,
       roomId,
       bookingDate,
     }).exec();
+
     if (existingBooking) {
       throw new BadRequestException('User has already booked this room on the given date');
     }
@@ -57,11 +56,25 @@ export class BookingsService {
     }
 
     // Create a new booking
-    const booking = new this.bookingModel({
+    const booking = await this.bookingModel.create({
       userId,
       roomId,
       bookingDate,
     });
-    return booking.save();
+
+    return {
+      
+      user: {
+        id: user._id,
+        name: user.username,
+        email: user.email,
+      },
+      room: {
+        id: room._id,
+        number: room.roomNumber,
+      },
+      bookingDate: booking.bookingDate,
+      bookingId: booking._id,
+    };
   }
 }
