@@ -8,7 +8,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Request 
 import { ApiTags } from '@nestjs/swagger';
   
   @Controller('users')
-  @ApiTags('Contest')
+  @ApiTags('Users')
   export class UsersController {
     constructor(private readonly usersService: UsersService) {}
   

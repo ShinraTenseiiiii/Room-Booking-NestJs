@@ -5,7 +5,7 @@ import { ParseDatePipe } from '../pipes/parse-date.pipe';
 import { ApiTags } from '@nestjs/swagger';
 
 @Controller('rooms')
-@ApiTags('Contest')
+@ApiTags('Rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 

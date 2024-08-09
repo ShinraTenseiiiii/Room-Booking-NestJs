@@ -8,7 +8,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Types } from 'mongoose';
 
 @Controller('bookings')
-@ApiTags('Contest')
+@ApiTags('Bookings')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
@@ -51,16 +51,16 @@ export class BookingsController {
   @Get('room-details')
   async getRoomDetails(@Query('date') date?: Date, @Query('roomId') roomId?: string): Promise<any> {
     if (date && roomId) {
-      return true
-      //this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
+      
+    //  this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
 
     }
     else if(roomId) {
-      return false
-      //this.bookingsService.getRoomDetailsByRoomId(roomId);
+   
+   //   this.bookingsService.getRoomDetailsByRoomId(roomId);
     }
     else {
-      return this.bookingsService.getAllRoomDetails();
+     return this.bookingsService.getAllRoomDetails();
     }
   }
   
