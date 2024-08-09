@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 import { UsersEntity } from 'src/users/entities/user.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 export type BookingDocument = HydratedDocument<Booking>;
 
 @Schema()
 export class Booking {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
-  userId: UsersEntity;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'UsersEntity' })
+  userId: Types.ObjectId;
 
   @Prop({ type: String })
   userName: string;

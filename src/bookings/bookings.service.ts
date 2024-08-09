@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { UsersEntity } from 'src/users/entities/user.entity';
+import { log } from 'util';
 
 @Injectable()
 export class BookingsService {
@@ -12,9 +13,6 @@ export class BookingsService {
     @InjectModel(Room.name) private roomModel: Model<Room>,
     @InjectModel(UsersEntity.name) private userModel: Model<UsersEntity>,
   ) {}
-
-
-
   async checkAvailability(roomId: string, bookingDate: Date): Promise<{ roomId: string; bookingDate: Date; availability: boolean }> {
     const room = await this.roomModel.findById(roomId).exec();
     if (!room) {
@@ -99,7 +97,7 @@ export class BookingsService {
   }
 
 
-// booking details 
+// booking details (For user)
 async getBookingDetailsForUser(userId: string): Promise<any> {
   const bookings = await this.bookingModel
     .find({ userId })
@@ -114,79 +112,134 @@ async getBookingDetailsForUser(userId: string): Promise<any> {
 
   return bookingDetails;
 }
-
+// for admin 
 async getAllBookingDetails(): Promise<any> {
   const bookings = await this.bookingModel
     .find()
     .populate('roomId')
     .populate('userId')
     .exec();
+//console.log(bookings);
 
-  const bookingDetails = bookings.map((booking) => ({
-    roomName: booking.roomId.roomName,
-    roomNumber: booking.roomId.roomNumber,
-    bookedDate: booking.bookingDate,
-    bookedBy: booking.userId.username,
+  const bookingDetails = await Promise.all(bookings.map(async (booking) => {
+    const user = await this.userModel.findById(booking.userId).exec();
+    console.log(user);
+    
+    if(user){
+    return {
+      roomName: booking.roomId.roomName,
+      roomNumber: booking.roomId.roomNumber,
+      bookedDate: booking.bookingDate,
+      bookedBy: user.username,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    };
+  }
   }));
 
   return bookingDetails;
 }
 
-
 // get room details 
 
-async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
-  const room = await this.roomModel.findById(roomId).exec();
-  if (!room) {
-    throw new NotFoundException(`Room with ID ${roomId} not found`);
-  }
+//by date and room id
+// async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> { 
+//   const room = await this.roomModel.findById(roomId).exec();
+//   if (!room) {
+//     throw new NotFoundException(`Room with ID ${roomId} not found`);
+//   }
 
-  const roomBookings = await this.bookingModel
-    .find({ roomId: room._id, bookingDate: date })
-    .populate('userId')
-    .exec();
+//   const roomBookings = await this.bookingModel
+//     .find({ roomId: room._id, bookingDate: date })
+//     .populate('userId')
+//     .exec();
 
-  const roomDetails = {
-    roomName: room.roomName,
-    roomNumber: room.roomNumber,
-    availableSeats: room.capacity - roomBookings.length,
-    booking: roomBookings.map((booking) => ({
-      userDetails: {
-        username: booking.userId.username,
-        email: booking.userId.email,
-      },
-      bookingDate: booking.bookingDate,
-      bookingId: booking._id,
-    })),
-  };
+//   const roomDetails = {
+//     roomName: room.roomName,
+//     roomNumber: room.roomNumber,
+//     availableSeats: room.capacity - roomBookings.length,
+//     booking: roomBookings.map((booking) => ({
+//       userDetails: {
+//         username: booking.userId.username,
+//         email: booking.userId.email,
+//       },
+//       bookingDate: booking.bookingDate,
+//       bookingId: booking._id,
+//     })),
+//   };
 
-  return roomDetails;
-}
+//   return roomDetails;
+// }
 
+// // by room id
+// async getRoomDetailsByRoomId(roomId: string): Promise<any> {
+//   const room = await this.roomModel.findById(roomId).exec();
+//   if (!room) {
+//     throw new NotFoundException(`Room with ID ${roomId} not found`);
+//   }
+
+//   const roomBookings = await this.bookingModel
+//     .find({ roomId: room._id })
+//     .populate('userId')
+//     .exec();
+
+//   const roomDetails = {
+//     roomName: room.roomName,
+//     roomNumber: room.roomNumber,
+//     bookings: roomBookings.reduce((acc, booking) => {
+//       const date = booking.bookingDate.toISOString().split('T')[0];
+//       if (!acc[date]) {
+//         acc[date] = [];
+//       }
+//       acc[date].push({
+//         userDetails: {
+//           username: booking.userId.username,
+//           email: booking.userId.email,
+//         },
+//         bookingId: booking._id,
+//       });
+//       return acc;
+//     }, {}),
+//   };
+
+//   return roomDetails;
+// }
+
+// default fetxh
 async getAllRoomDetails(): Promise<any[]> {
   const rooms = await this.roomModel.find().exec();
-
+  const user = await this.userModel.find().exec();
   const roomDetails = await Promise.all(
-    rooms.map(async (room) => {
-      const roomBookings = await this.bookingModel
-        .find({ roomId: room._id })
-        .populate('userId')
-        .exec();
+      rooms.map(async (room) => {
+          const roomBookings = await this.bookingModel
+              .find({ roomId: room._id })
+              .populate('userId')
+              .exec();
 
-      return {
-        roomName: room.roomName,
-        roomNumber: room.roomNumber,
-        availableSeats: room.capacity - roomBookings.length,
-        booking: roomBookings.map((booking) => ({
-          userDetails: {
-            username: booking.userId.username,
-            email: booking.userId.email,
-          },
-          bookingDate: booking.bookingDate,
-          bookingId: booking._id,
-        })),
-      };
-    })
+          const userDetails = await Promise.all(
+              roomBookings.map(async (booking) => {
+                  const user = await this.userModel.findById(booking.userId._id).exec();
+                  return {
+                      username: user.username,
+                      email: user.email,
+                  };
+              })
+          );
+
+          return {
+              roomName: room.roomName,
+              roomNumber: room.roomNumber,
+              availableSeats: room.capacity - roomBookings.length,
+              booking: roomBookings.map((booking, index) => ({
+                  userDetails: userDetails[index],
+                  bookingDate: booking.bookingDate,
+                  bookingId: booking._id,
+              })),
+          };
+      })
   );
 
   return roomDetails;

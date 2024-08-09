@@ -5,6 +5,7 @@ import { BookingsService } from './bookings.service';
 import { Booking } from './entities/booking.entity';
 import { BookSeatDto } from './dto/create-bookings.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Types } from 'mongoose';
 
 @Controller('bookings')
 @ApiTags('Contest')
@@ -32,22 +33,33 @@ export class BookingsController {
       throw new BadRequestException('Error processing booking');
     }
   }
- 
+
 
   @Get('booking-details')
   async getBookingDetails(@Query('userId') userId?: string): Promise<any> {
     if (userId) {
+     // return true;      
+     console.log("first");
       return this.bookingsService.getBookingDetailsForUser(userId);
     } else {
+      console.log("second");
       return this.bookingsService.getAllBookingDetails();
-    }
+    
+}    
   }
 
   @Get('room-details')
   async getRoomDetails(@Query('date') date?: Date, @Query('roomId') roomId?: string): Promise<any> {
     if (date && roomId) {
-      return this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
-    } else {
+      return true
+      //this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
+
+    }
+    else if(roomId) {
+      return false
+      //this.bookingsService.getRoomDetailsByRoomId(roomId);
+    }
+    else {
       return this.bookingsService.getAllRoomDetails();
     }
   }
