@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model, ObjectId, Types } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { UsersEntity } from 'src/users/entities/user.entity';
-import { log } from 'util';
 
 @Injectable()
 export class BookingsService {
@@ -113,11 +112,12 @@ export class BookingsService {
 // booking details (For user)
 
 
-async getBookingDetailsForUser(userId: string): Promise<any> {
+async getBookingDetailsForUser(userId: any ): Promise<any> {
   const bookings = await this.bookingModel
     .find({ userId })
     .populate('roomId')
     .exec();
+
 
   const bookingDetails = bookings.map((booking) => ({
     roomName: booking.roomId.roomName,
@@ -132,12 +132,17 @@ async getBookingDetailsForUser(userId: string): Promise<any> {
 
 // for admin 
 async getAllBookingDetails(): Promise<any> {
+
+  const limit = 7; // Number of entries per page
+
   const bookings = await this.bookingModel
     .find()
     .populate('roomId')
     .populate('userId')
+    .sort({ bookingDate: -1 }) // sorting by bookingDate > des order
+    .limit(limit)
     .exec();
-//console.log(bookings);
+
 
   const bookingDetails = await Promise.all(bookings.map(async (booking) => {
     const user = await this.userModel.findById(booking.userId).exec();
@@ -174,22 +179,32 @@ async getAllBookingDetails(): Promise<any> {
 // get room details 
 
 //by date and room id
-async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> { 
-  const room = await this.roomModel.findById(roomId).exec();
-  if (!room) {
-    throw new NotFoundException(`Room with ID ${roomId} not found`);
-  }
-
-  const roomBookings = await this.bookingModel
-    .find({ roomId: room._id, bookingDate: date })
-    .populate('userId')
+async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
+  const bookings = await this.bookingModel
+    .find({
+      bookingDate: date,
+      roomId: new mongoose.Types.ObjectId(roomId),
+    })
     .exec();
 
-  const roomDetails = {
-    // 
-  };
+  const bookingDetails = await Promise.all(bookings.map(async (booking) => {
+    const user = await this.userModel.findById(booking.userId).exec();
+    if (user) {
+      return {
+        roomName: booking.roomId.roomName,
+        roomNumber: booking.roomId.roomNumber,
+        bookedDate: booking.bookingDate,
+        bookedBy: user.username,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },
+      };
+    }
+  }));
 
-  return roomDetails;
+  return bookingDetails;
 }
 
 
@@ -199,59 +214,54 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
 
 
 
-
 // by room id
-// async getRoomDetailsByRoomId(roomId: string): Promise<any> {
-//   const rooms = await this.roomModel.find().exec();
-
-//   const roomDetails = await Promise.all(rooms.map(async (room) => {
-//     if (room.roomNumber === roomId) {
-//       const bookedDates = room.bookedDates; // Assuming bookedDates is an array of dates
-//       const totalSeats = room.capacity; // Assuming capacity is the total number of seats
-
-//       // Initialize available seats for all dates to total seats
-//       const availableSeatsByDate: Record<string, number> = {};
-//       bookedDates.forEach((bookedDate) => {
-//         const date = new Date(bookedDate);
-//         const year = date.getFullYear();
-//         const month = date.getMonth();
-//         const day = date.getDate();
-//         const key = `${year}-${month}-${day}`;
-
-//         availableSeatsByDate[key] = totalSeats;
-//       });
-
-//       // Set available seats to 0 for booked dates
-//       bookedDates.forEach((bookedDate) => {
-//         const date = new Date(bookedDate);
-//         const year = date.getFullYear();
-//         const month = date.getMonth();
-//         const day = date.getDate();
-//         const key = `${year}-${month}-${day}`;
-
-//         availableSeatsByDate[key] = 0;
-//       });
-
-//       // Check if any date has available seats
-//       const hasAvailableSeats = Object.values(availableSeatsByDate).some((value) => value > 0);
-
-//       return {
-//         roomNumber: room.roomNumber,
-//         roomName: room.roomName,
-//         bookedDates: bookedDates.map((date) => new Date(date).toISOString()),
-//         availableSeats: hasAvailableSeats ? availableSeatsByDate : 'Available',
-//       };
-//     }
-//   }));
 
 
-//   // Filter the results by roomId
-//   const filteredRoomDetails = roomDetails.find((room) => room !== undefined);
-
-//   return filteredRoomDetails;
-// }
 
 
+
+async getRoomDetailsByRoomId(roomId: string): Promise<any> {
+  try {
+    
+    const room = await this.roomModel.findById(roomId).exec();
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const availableSeatsByDate = {};
+    for (const bookedDate of room.bookedDates) {
+      const date = bookedDate.toDateString();
+      if (!availableSeatsByDate[date]) {
+        availableSeatsByDate[date] = room.capacity;
+      }
+      availableSeatsByDate[date] -= 1;
+    }
+// console.log(availableSeatsByDate);
+// console.log(room.roomNumber);
+// console.log(room.roomName);
+// console.log(roomId);
+
+
+
+
+    const roomDetails = [
+{      roomId,
+      roomName: room.roomName,
+      capacity: room.capacity,
+      roomNumber: room.roomNumber,
+      availableSeatsByDate,}
+    ]
+
+// console.log(roomDetails);
+
+    return roomDetails;
+
+  } catch (error) {
+    console.error('Error retrieving room details:', error);
+    throw new InternalServerErrorException('An error occurred while retrieving room details.');
+  }
+}
 
 
 
@@ -268,43 +278,47 @@ async getAllRoomDetails(): Promise<any[]> {
     .populate('userId')
     .exec();
 
-  const roomDetails = await Promise.all(bookings.map(async (booking) => {
-    const user = await this.userModel.findById(booking.userId).exec();
-
-    if (user) {
+  const roomDetails = Object.values(
+    bookings.reduce((acc, booking) => {
+      const user = booking.userId;
       const roomId = booking.roomId;
-      const bookedDates = roomId.bookedDates;
-      const totalSeats = roomId.capacity;
 
-      //available seats for each date
-      const availableSeatsByDate = {};
-      bookedDates.forEach((bookedDate) => {
-        const date = new Date(bookedDate);
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const day = date.getDate();
-        const key = `${year}-${month}-${day}`;
+      if (user && roomId) {
+        const roomKey = `${roomId.roomName}-${roomId.roomNumber}`;
 
-        if (!availableSeatsByDate[key]) {
-          availableSeatsByDate[key] = totalSeats-1;
+        if (!acc[roomKey]) {
+          acc[roomKey] = {
+            roomName: roomId.roomName,
+            roomNumber: roomId.roomNumber,
+            capacity: roomId.capacity,
+            availableSeats: {},
+          };
         }
 
-        availableSeatsByDate[key]--;
-      });
+        const availableSeatsByDate = acc[roomKey].availableSeats;
+        const bookedDates = roomId.bookedDates;
+        const totalSeats = roomId.capacity;
 
-      return {
-        roomName: roomId.roomName,
-        roomNumber: roomId.roomNumber,
-        capaciy: roomId.capacity,
-        availableSeats: availableSeatsByDate,
+        bookedDates.forEach((bookedDate) => {
+          const date = new Date(bookedDate);
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+          const key = `${year}-${month}-${day}`;
 
-      };
-    }
+          if (!availableSeatsByDate[key]) {
+            availableSeatsByDate[key] = totalSeats - 1;
+          }
 
-    return null; // or handle the case when user is not found
-  }));
+          availableSeatsByDate[key]--;
+        });
+      }
 
-  return roomDetails.filter(Boolean); // Remove null values
+      return acc;
+    }, {})
+  );
+
+  return roomDetails;
 }
 
 }

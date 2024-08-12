@@ -1,0 +1,48 @@
+[
+    {
+        "_id": "66b3123af938498b5d64f88c",
+        "roomName": "Testing",
+        "roomNumber": 104,
+        "seatCapacity": 45,
+        "appliedCandidates": []
+    },
+    {
+        "_id": "66b318cf05fa35fa37ed4ee4",
+        "roomName": "Testing1",
+        "roomNumber": 105,
+        "seatCapacity": 45,
+        "appliedCandidates": [
+            {
+                "userDetails": {
+                    "username": "Debnath3",
+                    "email": "debnath3@gmail.com"
+                },
+                "bookingDate": "2024-08-09T18:30:00.000Z",
+                "bookingId": "66b33a5d803eff3d80b5a126"
+            },
+            {
+                "userDetails": {
+                    "username": "Debnath3",
+                    "email": "debnath3@gmail.com"
+                },
+                "bookingDate": "2024-08-14T18:30:00.000Z",
+                "bookingId": "66b34ed6a7efc8e8f0358dac"
+            },
+            {
+                "userDetails": {
+                    "username": "Debnath3",
+                    "email": "debnath3@gmail.com"
+                },
+                "bookingDate": "2024-08-16T18:30:00.000Z",
+                "bookingId": "66b35954f1eb169686ef6f9d"
+            }
+        ]
+    },
+    {
+        "_id": "66b323e6ac18b988fcc67f9e",
+        "roomName": "mngmnt rm",
+        "roomNumber": 210,
+        "seatCapacity": 130,
+        "appliedCandidates": []
+    }
+]

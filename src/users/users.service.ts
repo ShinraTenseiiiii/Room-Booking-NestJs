@@ -143,7 +143,6 @@ import {
       username: string,
       applyForDto: ApplyForDto,
     ): Promise<UsersEntity> {
-      console.log("applyForDto",applyForDto);
       
       const user = await this.usersModel.findOne({ username });
       if (!user) {
@@ -153,7 +152,6 @@ import {
       const appliedForJob = new this.jobModel({
         ...applyForDto,
       });
-  console.log("appliedForJob");
   
       await appliedForJob.save();
   

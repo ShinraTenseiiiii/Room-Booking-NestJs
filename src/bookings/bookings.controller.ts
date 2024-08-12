@@ -1,11 +1,12 @@
 // src/bookings/bookings.controller.ts
-import { Controller,Get, Query, Post, Body, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Req ,Get, Query, Post, Body, BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-
+import { Types } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { BookSeatDto } from './dto/create-bookings.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { Types } from 'mongoose';
+import { ExpressRequest } from '../middlewares/auth.middleware';
+import { string } from 'zod';
 
 @Controller('bookings')
 @ApiTags('Bookings')
@@ -35,29 +36,39 @@ export class BookingsController {
   }
 
 
+
+
+
+  
   @Get('booking-details')
-  async getBookingDetails(@Query('userId') userId?: string): Promise<any> {
-    if (userId) {
+  async getBookingDetails(@Req() req: ExpressRequest): Promise<any> {
+    const userType = req.user?.usersType;
+    if (userType === 2) {
      // return true;      
-     console.log("first");
-      return this.bookingsService.getBookingDetailsForUser(userId);
-    } else {
-      console.log("second");
+     
+      return this.bookingsService.getBookingDetailsForUser(req.user?._id);
+    } else if(userType === 1) {
+
       return this.bookingsService.getAllBookingDetails();
     
 }    
   }
 
+
+
+
+
   @Get('room-details')
   async getRoomDetails(@Query('date') date?: Date, @Query('roomId') roomId?: string): Promise<any> {
     if (date && roomId) {
       
-    //  this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
+     return this.bookingsService.getRoomDetailsByDateAndRoomId(date, roomId);
 
     }
     else if(roomId) {
    
-   //   this.bookingsService.getRoomDetailsByRoomId(roomId);
+     return this.bookingsService.getRoomDetailsByRoomId(roomId);
+     
     }
     else {
      return this.bookingsService.getAllRoomDetails();

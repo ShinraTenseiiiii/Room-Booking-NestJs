@@ -42,9 +42,9 @@ export class AppModule {
       //room controller routes
       { path: 'rooms/create', method: RequestMethod.POST },
       //booking details 
-    //  {  path: 'bookings/booking-details',  method: RequestMethod.GET},
+     // {  path: 'bookings/booking-details',  method: RequestMethod.GET},
       // room
-      { path: 'bookings/room-details', method: RequestMethod.GET ,},
+      { path: 'bookings/room-details', method: RequestMethod.GET},
      { path: 'bookings/room-details/:roomId/:date', method: RequestMethod.GET },   // TODO
      { path : 'bookings/room-details/:roomId', method: RequestMethod.GET},
     );
