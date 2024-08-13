@@ -112,20 +112,32 @@ export class BookingsService {
 // booking details (For user)
 
 
-async getBookingDetailsForUser(userId: any ): Promise<any> {
+async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upcomingBookings: any[] }> {
   const bookings = await this.bookingModel
     .find({ userId })
     .populate('roomId')
     .exec();
 
+  const now = new Date();
+  const pastBookings = bookings.filter((booking) => new Date(booking.bookingDate) < now);
+  const upcomingBookings = bookings.filter((booking) => new Date(booking.bookingDate) >= now);
 
-  const bookingDetails = bookings.map((booking) => ({
+  const pastBookingDetails = pastBookings.map((booking) => ({
     roomName: booking.roomId.roomName,
     roomNumber: booking.roomId.roomNumber,
     bookedDate: booking.bookingDate,
+    bookingId: booking._id,
+
   }));
 
-  return bookingDetails;
+  const upcomingBookingDetails = upcomingBookings.map((booking) => ({
+    roomName: booking.roomId.roomName,
+    roomNumber: booking.roomId.roomNumber,
+    bookedDate: booking.bookingDate,
+    bookingId: booking._id,
+  }));
+
+  return { pastBookings: pastBookingDetails, upcomingBookings: upcomingBookingDetails };
 }
 
 
@@ -139,14 +151,14 @@ async getAllBookingDetails(): Promise<any> {
     .find()
     .populate('roomId')
     .populate('userId')
-    .sort({ bookingDate: -1 }) // sorting by bookingDate > des order
-    .limit(limit)
+    .sort({  }) // sorting by bookingDate > des order
+    //.limit(limit)
     .exec();
 
 
   const bookingDetails = await Promise.all(bookings.map(async (booking) => {
     const user = await this.userModel.findById(booking.userId).exec();
-    console.log(user);
+    // console.log(user);
     
     if(user){
     return {

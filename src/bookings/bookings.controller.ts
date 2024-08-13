@@ -41,10 +41,9 @@ export class BookingsController {
 
   
   @Get('booking-details')
-  async getBookingDetails(@Req() req: ExpressRequest): Promise<any> {
+  async getBookingDetails(@Req() req: ExpressRequest): Promise<any> {    // Good practice
     const userType = req.user?.usersType;
     if (userType === 2) {
-     // return true;      
      
       return this.bookingsService.getBookingDetailsForUser(req.user?._id);
     } else if(userType === 1) {
