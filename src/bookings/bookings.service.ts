@@ -20,20 +20,37 @@ export class BookingsService {
 
 
 
-  async checkAvailability(roomId: string, bookingDate: Date): Promise<{ roomId: string; bookingDate: Date; availability: boolean }> {
+  async checkAvailability(roomId: string, bookingDate: Date): Promise<{
+    roomId: string;
+    bookingDate: Date;
+    availability: boolean;
+    totalCapacity: number;
+    bookedSeats: number;
+    availableSeats: number;
+  }> {
     const room = await this.roomModel.findById(roomId).exec();
     if (!room) {
       throw new NotFoundException('Room not found');
     }
-
+  
     const roomBookingsOnDate = await this.bookingModel.find({
       roomId,
       bookingDate,
     }).exec();
-
-    const availability = roomBookingsOnDate.length < room.capacity;
-
-    return { roomId, bookingDate, availability };
+  
+    const totalCapacity = room.capacity;
+    const bookedSeats = roomBookingsOnDate.length;
+    const availableSeats = totalCapacity - bookedSeats;
+    const availability = availableSeats > 0;
+  
+    return {
+      roomId,
+      bookingDate,
+      availability,
+      totalCapacity,
+      bookedSeats,
+      availableSeats,
+    };
   }
   
   
@@ -146,6 +163,9 @@ async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upc
 
 
 
+
+
+
 // for admin 
 async getAllBookingDetails(query: Query): Promise<any> {
   console.log(query);
@@ -161,6 +181,7 @@ async getAllBookingDetails(query: Query): Promise<any> {
     .skip(skip)
     .limit(resPerPage)
     .exec();
+    const totalBookings = await this.bookingModel.countDocuments().exec();
 
   const bookingDetails = await Promise.all(bookings.map(async (booking) => {
     const user = await this.userModel.findById(booking.userId).exec();
@@ -183,8 +204,13 @@ async getAllBookingDetails(query: Query): Promise<any> {
     }
   }));
 
-  return bookingDetails;
+  return {bookingDetails, totalBookings};
 }
+
+
+
+
+
 
 
 
