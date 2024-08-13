@@ -4,6 +4,8 @@ import mongoose, { Model, ObjectId, Types } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { UsersEntity } from 'src/users/entities/user.entity';
+import { query } from 'express';
+import { Query } from 'express-serve-static-core';
 
 @Injectable()
 export class BookingsService {
@@ -118,6 +120,8 @@ async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upc
     .populate('roomId')
     .exec();
 
+    
+
   const now = new Date();
   const pastBookings = bookings.filter((booking) => new Date(booking.bookingDate) < now);
   const upcomingBookings = bookings.filter((booking) => new Date(booking.bookingDate) >= now);
@@ -143,37 +147,40 @@ async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upc
 
 
 // for admin 
-async getAllBookingDetails(): Promise<any> {
+async getAllBookingDetails(query: Query): Promise<any> {
+  console.log(query);
 
-  const limit = 7; // Number of entries per page
+  const resPerPage = 5;
+  const currentPage = Number(query.page) || 1;
+  const skip = resPerPage * (currentPage - 1);
 
   const bookings = await this.bookingModel
     .find()
     .populate('roomId')
     .populate('userId')
-    .sort({  }) // sorting by bookingDate > des order
-    //.limit(limit)
+    .skip(skip)
+    .limit(resPerPage)
     .exec();
-
 
   const bookingDetails = await Promise.all(bookings.map(async (booking) => {
     const user = await this.userModel.findById(booking.userId).exec();
-    // console.log(user);
-    
-    if(user){
-    return {
-      roomName: booking.roomId.roomName,
-      roomNumber: booking.roomId.roomNumber,
-      bookedDate: booking.bookingDate,
-      bookedBy: user.username,
 
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    };
-  }
+    if (user) {
+      return {
+        roomName: booking.roomId.roomName,
+        roomNumber: booking.roomId.roomNumber,
+        bookedDate: booking.bookingDate,
+        bookedBy: user.username,
+
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },
+      };
+    } else {
+      throw new Error(`User not found for booking ${booking._id}`);
+    }
   }));
 
   return bookingDetails;

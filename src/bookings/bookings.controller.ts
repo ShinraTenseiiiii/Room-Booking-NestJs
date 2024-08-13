@@ -7,7 +7,8 @@ import { BookSeatDto } from './dto/create-bookings.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ExpressRequest } from '../middlewares/auth.middleware';
 import { string } from 'zod';
-
+import { query } from 'express';
+import { Query as ExpressQuery } from 'express-serve-static-core'
 @Controller('bookings')
 @ApiTags('Bookings')
 export class BookingsController {
@@ -41,14 +42,14 @@ export class BookingsController {
 
   
   @Get('booking-details')
-  async getBookingDetails(@Req() req: ExpressRequest): Promise<any> {    // Good practice
+  async getBookingDetails(@Req() req: ExpressRequest, @Query() query: ExpressQuery): Promise<any> {    // Good practice
     const userType = req.user?.usersType;
     if (userType === 2) {
      
       return this.bookingsService.getBookingDetailsForUser(req.user?._id);
     } else if(userType === 1) {
 
-      return this.bookingsService.getAllBookingDetails();
+      return this.bookingsService.getAllBookingDetails(query);
     
 }    
   }
