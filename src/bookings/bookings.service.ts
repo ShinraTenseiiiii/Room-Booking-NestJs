@@ -178,6 +178,7 @@ async getAllBookingDetails(query: Query): Promise<any> {
     .find()
     .populate('roomId')
     .populate('userId')
+    .sort({ bookingDate: 1})
     .skip(skip)
     .limit(resPerPage)
     .exec();
@@ -236,6 +237,7 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
     const user = await this.userModel.findById(booking.userId).exec();
     if (user) {
       return {
+        roomId : booking.roomId,
         roomName: booking.roomId.roomName,
         roomNumber: booking.roomId.roomNumber,
         bookedDate: booking.bookingDate,
@@ -250,6 +252,22 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
   }));
 
   return bookingDetails;
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
 }
 
 
@@ -265,47 +283,34 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
 
 
 
-async getRoomDetailsByRoomId(roomId: string): Promise<any> {
-  try {
-    
-    const room = await this.roomModel.findById(roomId).exec();
+async getRoomDetailsByRoomId(roomId: string): Promise<any[]> {
+  const room = await this.roomModel.findById(roomId).exec();
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
+  if (!room) {
+    throw new NotFoundException('Room not found');
+  }
+
+  const bookedDates = await this.bookingModel.find({ roomId: room._id }).exec();
+  const totalSeats = room.capacity;
+  const availableSeatsByDate = {};
+
+  bookedDates.forEach((bookedDate) => {
+    const dateKey = `${bookedDate.bookingDate.getFullYear()}-${bookedDate.bookingDate.getMonth() + 1}-${bookedDate.bookingDate.getDate()}`;
+    if (!availableSeatsByDate[dateKey]) {
+      availableSeatsByDate[dateKey] = totalSeats;
     }
+    availableSeatsByDate[dateKey]--;
+  });
 
-    const availableSeatsByDate = {};
-    for (const bookedDate of room.bookedDates) {
-      const date = bookedDate.toDateString();
-      if (!availableSeatsByDate[date]) {
-        availableSeatsByDate[date] = room.capacity;
-      }
-      availableSeatsByDate[date] -= 1;
-    }
-// console.log(availableSeatsByDate);
-// console.log(room.roomNumber);
-// console.log(room.roomName);
-// console.log(roomId);
-
-
-
-
-    const roomDetails = [
-{      roomId,
+  return [
+    {
+      roomId: room._id,
       roomName: room.roomName,
       capacity: room.capacity,
       roomNumber: room.roomNumber,
-      availableSeatsByDate,}
-    ]
-
-// console.log(roomDetails);
-
-    return roomDetails;
-
-  } catch (error) {
-    console.error('Error retrieving room details:', error);
-    throw new InternalServerErrorException('An error occurred while retrieving room details.');
-  }
+      availableSeats: availableSeatsByDate,
+    },
+  ];
 }
 
 
