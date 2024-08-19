@@ -19,8 +19,8 @@ export class BookSeatDto {
   readonly roomId: string;
 
   @ApiProperty({
-    type: String,
-    example: '2024-07-30T00:00:00Z',
+    type: Date,
+    example: '2024-07-30',
   })
   @IsNotEmpty()
   @IsDateString()

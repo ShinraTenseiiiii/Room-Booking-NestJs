@@ -1,13 +1,10 @@
 // src/bookings/bookings.controller.ts
 import { Controller, Req ,Get, Query, Post, Body, BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-import { Types } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { BookSeatDto } from './dto/create-bookings.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ExpressRequest } from '../middlewares/auth.middleware';
-import { string } from 'zod';
-import { query } from 'express';
 import { Query as ExpressQuery } from 'express-serve-static-core'
 @Controller('bookings')
 @ApiTags('Bookings')

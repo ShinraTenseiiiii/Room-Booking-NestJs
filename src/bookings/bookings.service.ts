@@ -4,8 +4,8 @@ import mongoose, { Model, ObjectId, Types } from 'mongoose';
 import { Booking } from './entities/booking.entity';
 import { Room } from 'src/rooms/entities/room.entity';
 import { UsersEntity } from 'src/users/entities/user.entity';
-import { query } from 'express';
 import { Query } from 'express-serve-static-core';
+import { populate } from 'dotenv';
 
 @Injectable()
 export class BookingsService {
@@ -231,43 +231,29 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
       bookingDate: date,
       roomId: new mongoose.Types.ObjectId(roomId),
     })
+    .populate('roomId')
     .exec();
 
-  const bookingDetails = await Promise.all(bookings.map(async (booking) => {
-    const user = await this.userModel.findById(booking.userId).exec();
-    if (user) {
+  if (bookings.length > 0) {
+    const room = bookings[0].roomId;
+    const bookedUsers = await Promise.all(bookings.map(async (booking) => {
+      const user = await this.userModel.findById(booking.userId).exec();
       return {
-        roomId : booking.roomId,
-        roomName: booking.roomId.roomName,
-        roomNumber: booking.roomId.roomNumber,
-        bookedDate: booking.bookingDate,
-        bookedBy: user.username,
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
-        },
+        id: user._id,
+        name: user.username,
+        email: user.email,
       };
-    }
-  }));
+    }));
 
-  return bookingDetails;
+    return {
+      roomNumber: room.roomNumber,
+      roomName: room.roomName,
+      totalCapacity: room.capacity,
+      bookedUsers,
+    };
+  }
 
-
-
-
-
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
+  return null; // or throw an error if no booking is found
 }
 
 
@@ -278,10 +264,6 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
 
 
 // by room id
-
-
-
-
 
 async getRoomDetailsByRoomId(roomId: string): Promise<any[]> {
   const room = await this.roomModel.findById(roomId).exec();
@@ -319,56 +301,39 @@ async getRoomDetailsByRoomId(roomId: string): Promise<any[]> {
 
 
 
-// default fetxh
-// Res : Room Number, Room Name, Booked Date, Booked By, Available Seats
+// default fetxh by ngOnInit
+// Res : Room Number, Room Name, Booked Date, Booked By, Available Seats[date:available_seats]
 async getAllRoomDetails(): Promise<any[]> {
-  const bookings = await this.bookingModel
-    .find()
-    .populate('roomId')
-    .populate('userId')
-    .exec();
+  const rooms = await this.roomModel.find().exec();
 
-  const roomDetails = Object.values(
-    bookings.reduce((acc, booking) => {
-      const user = booking.userId;
-      const roomId = booking.roomId;
+  const roomDetails = await Promise.all(
+    rooms.map(async (room) => {
+      const bookedDates = await this.bookingModel.find({ roomId: room._id }).exec();
+      const totalSeats = room.capacity;
+      const availableSeatsByDate = {};
 
-      if (user && roomId) {
-        const roomKey = `${roomId.roomName}-${roomId.roomNumber}`;
-
-        if (!acc[roomKey]) {
-          acc[roomKey] = {
-            roomName: roomId.roomName,
-            roomNumber: roomId.roomNumber,
-            capacity: roomId.capacity,
-            availableSeats: {},
-          };
+      bookedDates.forEach((bookedDate) => {
+        const dateKey = `${bookedDate.bookingDate.getFullYear()}-${bookedDate.bookingDate.getMonth() + 1}-${bookedDate.bookingDate.getDate()}`;
+        if (!availableSeatsByDate[dateKey]) {
+          availableSeatsByDate[dateKey] = totalSeats;
         }
+        availableSeatsByDate[dateKey]--;
+      });
 
-        const availableSeatsByDate = acc[roomKey].availableSeats;
-        const bookedDates = roomId.bookedDates;
-        const totalSeats = roomId.capacity;
-
-        bookedDates.forEach((bookedDate) => {
-          const date = new Date(bookedDate);
-          const year = date.getFullYear();
-          const month = date.getMonth();
-          const day = date.getDate();
-          const key = `${year}-${month}-${day}`;
-
-          if (!availableSeatsByDate[key]) {
-            availableSeatsByDate[key] = totalSeats - 1;
-          }
-
-          availableSeatsByDate[key]--;
-        });
-      }
-
-      return acc;
-    }, {})
+      return {
+        roomId: room._id,
+        roomName: room.roomName,
+        capacity: room.capacity,
+        roomNumber: room.roomNumber,
+        availableSeats: availableSeatsByDate,
+      };
+    })
   );
 
   return roomDetails;
 }
+
+
+
 
 }
