@@ -168,7 +168,6 @@ async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upc
 
 // for admin 
 async getAllBookingDetails(query: Query): Promise<any> {
-  console.log(query);
 
   const resPerPage = 5;
   const currentPage = Number(query.page) || 1;
@@ -245,12 +244,15 @@ async getRoomDetailsByDateAndRoomId(date: Date, roomId: string): Promise<any> {
       };
     }));
 
-    return {
+    const availableSeats = room.capacity - bookings.length;
+
+    return [{
       roomNumber: room.roomNumber,
       roomName: room.roomName,
-      totalCapacity: room.capacity,
+      capacity: room.capacity,
+      availableSeats,
       bookedUsers,
-    };
+    }];
   }
 
   return null; // or throw an error if no booking is found
