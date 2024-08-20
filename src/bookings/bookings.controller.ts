@@ -39,16 +39,18 @@ export class BookingsController {
 
   
   @Get('booking-details')
-  async getBookingDetails(@Req() req: ExpressRequest, @Query() query: ExpressQuery): Promise<any> {    // Good practice
+  async getBookingDetails( @Req() req: ExpressRequest, @Query() query: ExpressQuery): Promise<any> {
     const userType = req.user?.usersType;
-    if (userType === 2) {
-     
-      return this.bookingsService.getBookingDetailsForUser(req.user?._id);
-    } else if(userType === 1) {
+    const userId = req.user?._id;
 
+    const pastPage = Number(query.pastPage) || 1;
+    const upcomingPage = Number(query.upcomingPage) || 1;
+
+    if (userType === 2) {
+      return this.bookingsService.getBookingDetailsForUser(userId, pastPage, upcomingPage);
+    } else if (userType === 1) {
       return this.bookingsService.getAllBookingDetails(query);
-    
-}    
+    }
   }
 
 

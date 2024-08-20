@@ -131,34 +131,49 @@ export class BookingsService {
 // booking details (For user)
 
 
-async getBookingDetailsForUser(userId: any ): Promise<{ pastBookings: any[], upcomingBookings: any[] }> {
+async getBookingDetailsForUser(
+  userId: any,
+  pastPage: number,
+  upcomingPage: number
+): Promise<{ pastBookings: any[], upcomingBookings: any[], totalPastBookings: number, totalUpcomingBookings: number }> {
   const bookings = await this.bookingModel
     .find({ userId })
     .populate('roomId')
     .exec();
 
-    
-
   const now = new Date();
   const pastBookings = bookings.filter((booking) => new Date(booking.bookingDate) < now);
   const upcomingBookings = bookings.filter((booking) => new Date(booking.bookingDate) >= now);
 
-  const pastBookingDetails = pastBookings.map((booking) => ({
+  const totalPastBookings = pastBookings.length;
+  const totalUpcomingBookings = upcomingBookings.length;
+
+  const pastLimit = 5;
+  const upcomingLimit = 5;
+
+  const pastSkip = (pastPage - 1) * pastLimit;
+  const upcomingSkip = (upcomingPage - 1) * upcomingLimit;
+
+  const paginatedPastBookings = pastBookings.slice(pastSkip, pastSkip + pastLimit).map((booking) => ({
     roomName: booking.roomId.roomName,
     roomNumber: booking.roomId.roomNumber,
     bookedDate: booking.bookingDate,
     bookingId: booking._id,
-
   }));
 
-  const upcomingBookingDetails = upcomingBookings.map((booking) => ({
+  const paginatedUpcomingBookings = upcomingBookings.slice(upcomingSkip, upcomingSkip + upcomingLimit).map((booking) => ({
     roomName: booking.roomId.roomName,
     roomNumber: booking.roomId.roomNumber,
     bookedDate: booking.bookingDate,
     bookingId: booking._id,
   }));
 
-  return { pastBookings: pastBookingDetails, upcomingBookings: upcomingBookingDetails };
+  return {
+    pastBookings: paginatedPastBookings,
+    upcomingBookings: paginatedUpcomingBookings,
+    totalPastBookings,
+    totalUpcomingBookings,
+  };
 }
 
 

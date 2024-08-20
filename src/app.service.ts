@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  getHello(): boolean {
+    console.log('hello');
+    return true; // boolean responce for flutter
   }
 }
