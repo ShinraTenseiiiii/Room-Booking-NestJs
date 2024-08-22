@@ -26,7 +26,7 @@ import {
       @InjectModel(UsersEntity.name) private usersModel: Model<UsersEntity>,
       @InjectModel(JobEntity.name) private jobModel: Model<JobEntity>,
     ) {}
-
+  
     async buildUserResponse(usersEntity: UsersEntity): Promise<UsersResponseDto> {
       const jobIds = usersEntity.applyFor as Types.ObjectId[];
   

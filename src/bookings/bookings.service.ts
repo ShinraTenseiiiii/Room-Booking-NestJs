@@ -59,6 +59,7 @@ export class BookingsService {
   
   async bookSeat(userId: string, roomId: string, bookingDate: Date): Promise<any> {
     // Check if room exists
+    
     const room = await this.roomModel.findById(roomId).exec();
     if (!room) {
       throw new NotFoundException('Room not found');
@@ -105,7 +106,8 @@ export class BookingsService {
       roomId,
       bookingDate,
     });
-
+    console.log(bookingDate);
+ 
     return {
       
       user: {
@@ -154,14 +156,20 @@ async getBookingDetailsForUser(
   const pastSkip = (pastPage - 1) * pastLimit;
   const upcomingSkip = (upcomingPage - 1) * upcomingLimit;
 
-  const paginatedPastBookings = pastBookings.slice(pastSkip, pastSkip + pastLimit).map((booking) => ({
+  // Sort past bookings by date in descending order
+  const sortedPastBookings = pastBookings.sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime());
+
+  // Sort upcoming bookings by date in ascending order
+  const sortedUpcomingBookings = upcomingBookings.sort((a, b) => new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime());
+
+  const paginatedPastBookings = sortedPastBookings.slice(pastSkip, pastSkip + pastLimit).map((booking) => ({
     roomName: booking.roomId.roomName,
     roomNumber: booking.roomId.roomNumber,
     bookedDate: booking.bookingDate,
     bookingId: booking._id,
   }));
 
-  const paginatedUpcomingBookings = upcomingBookings.slice(upcomingSkip, upcomingSkip + upcomingLimit).map((booking) => ({
+  const paginatedUpcomingBookings = sortedUpcomingBookings.slice(upcomingSkip, upcomingSkip + upcomingLimit).map((booking) => ({
     roomName: booking.roomId.roomName,
     roomNumber: booking.roomId.roomNumber,
     bookedDate: booking.bookingDate,
@@ -175,6 +183,7 @@ async getBookingDetailsForUser(
     totalUpcomingBookings,
   };
 }
+
 
 
 
@@ -226,8 +235,47 @@ async getAllBookingDetails(query: Query): Promise<any> {
 
 
 
+// for dipanjan
+async getBookingDetailsForUserWithoutPagination(
+    userId: any
+  ): Promise<{ pastBookings: any[], upcomingBookings: any[], totalPastBookings: number, totalUpcomingBookings: number }> {
+    const bookings = await this.bookingModel
+      .find({ userId })
+      .populate('roomId')
+      .exec();
 
+    const now = new Date();
+    const pastBookings = bookings.filter((booking) => new Date(booking.bookingDate) < now);
+    const upcomingBookings = bookings.filter((booking) => new Date(booking.bookingDate) >= now);
 
+    const totalPastBookings = pastBookings.length;
+    const totalUpcomingBookings = upcomingBookings.length;
+
+    const sortedPastBookings = pastBookings
+      .sort((a, b) => new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime())
+      .map((booking) => ({
+        roomName: booking.roomId.roomName,
+        roomNumber: booking.roomId.roomNumber,
+        bookedDate: booking.bookingDate,
+        bookingId: booking._id,
+      }));
+
+    const sortedUpcomingBookings = upcomingBookings
+      .sort((a, b) => new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime())
+      .map((booking) => ({
+        roomName: booking.roomId.roomName,
+        roomNumber: booking.roomId.roomNumber,
+        bookedDate: booking.bookingDate,
+        bookingId: booking._id,
+      }));
+
+    return {
+      pastBookings: sortedPastBookings,
+      upcomingBookings: sortedUpcomingBookings,
+      totalPastBookings,
+      totalUpcomingBookings,
+    };
+  }
 
 
 

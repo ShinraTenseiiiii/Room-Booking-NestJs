@@ -53,8 +53,20 @@ export class BookingsController {
     }
   }
 
+// for dipanjan
+  @Get('booking-details-mob')
+  async getBookingDetailsForMobile(
+    @Req() req: ExpressRequest
+  ): Promise<any> {
+    const userType = req.user?.usersType;
+    const userId = req.user?._id;
 
-
+    if (userType === 2) {
+      return this.bookingsService.getBookingDetailsForUserWithoutPagination(userId);
+    } else {
+      throw new BadRequestException('This endpoint is only for users');
+    }
+  }
 
 
   @Get('room-details')
