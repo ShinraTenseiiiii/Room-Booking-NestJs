@@ -1,3 +1,7 @@
+# Job Applying and Seat Booking Portal
+
+A comprehensive portal built with Angular, NestJS and MongoDB with Typescript. This application allows users to apply for jobs, book seats in rooms, check availability, and manage bookings.
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
@@ -19,55 +23,101 @@
     <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
   <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
+
+- **User Authentication**: Secure login and registration.
+- **Job Application**: Apply for jobs and schedule meetings.
+- **Room Booking**: Book rooms for specific dates.
+- **Availability Check**: Check room availability for a given date.
+- **Booking Management**: View past and upcoming bookings.
+- **Admin Features**: Manage users, job applications, and bookings.
 
 ## Installation
 
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/ShinraTenseiiiii/Room-Booking-NestJs.git
+    ```
+
+2. **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+3. **Set up environment variables**:
+    Create a `.env` file in the root directory and add the following:
+    ```env
+    MONGO_URI=your_mongodb_connection_string
+    JWT_SECRET=your_jwt_secret
+    ```
+
+## Running the App
+
+### Development
+
 ```bash
-$ npm install
+# Start the application in development mode
+npm run start
+
+# Start the application in watch mode
+npm run d
 ```
 
-## Running the app
+### Production
 
 ```bash
-# development
-$ npm run start
+# Build the application
+npm run build
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Start the application in production mode
+npm run start:prod
 ```
 
-## Test
+### Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Run unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# Run e2e tests
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:cov
 ```
 
-## Support
+## API Endpoints
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### User Authentication
 
-## Stay in touch
+- **Register**: `POST /users`
+- **Login**: `POST /users/login`
+- **Current User**: `GET /users`
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Job Application
+
+- **Apply for a Job**: `POST /users/applyFor`
+- **Update Application Status**: `POST /users/update-application-status/:username/:role`
+- **Schedule Meeting**: `POST /users/schedule-meeting/:username/:jobId`
+- **Get All Users**: `GET /users/all-users`
+
+### Room Booking
+
+- **Book a Seat**: `POST /bookings/book-seat`
+- **Check Availability**: `GET /bookings/availability`
+- **Booking Details**: `GET /bookings/booking-details`
+
+## Demo
+
+Check out the live demo of the application [here](https://booking-app-phi-nine.vercel.app/).
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
